@@ -1,0 +1,19 @@
+{
+  "name": "alisa-npm",
+  "version": "0.1.1",
+  "description": "Controlling Alice via a WebSocket",
+  "main": "index.js",
+  "scripts": {
+    "start": "node test"
+  },
+  "author": "bondrogeen",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.22.0",
+    "node-dns-sd": "^0.4.2",
+    "ws": "^8.2.2"
+  },
+  "devDependencies": {
+    "dotenv": "^10.0.0"
+  }
+}
