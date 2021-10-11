@@ -9,8 +9,9 @@ const alisa = new Alisa({ token, debug: true })
 alisa.on("message", (message) => {
   console.log(JSON.stringify(message, null, 2));
 });
-alisa.on("open", (message) => {
-  console.log(message);
+
+alisa.on("state", (message) => {
+  console.log('state', message);
 });
 
 alisa.start()

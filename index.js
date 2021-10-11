@@ -26,6 +26,16 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
     }
   }
 
+  self.getState = function () {
+    const info = {
+      name: self.name,
+      devices: self.devices.map(({ id, ip, port, platform, state = {} }) => {
+        return { id, ip, port, platform, state }
+      }),
+      token: self.token
+    }
+    return JSON.parse(JSON.stringify(info))
+  }
   self.findDevices = async function () {
     try {
       const res = await mDns.discover({ name: self.name })
@@ -115,11 +125,13 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
       cert: device.security.server_certificate,
       rejectUnauthorized: false
     };
-    device.state = {};
+    device.state = { status: 'init' };
+    self.emit("state", { id: device.id, state: device.state });
     device.ws = new WebSocket(`wss://${device.ip}:${device.port}`, options);
 
     device.ws.on('open', function open () {
-      self.emit("open", device.id);
+      device.state = { status: 'open' };
+      self.emit("state", { id: device.id, state: device.state });
       sendMessage(device.id, 'command', { payload: 'ping' });
       device.watchDog = setTimeout(() => device.ws.close(), 10000);
       // device.ping = setInterval(ping, 1000, device);
@@ -128,10 +140,11 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
     device.ws.on('message', function incoming (data) {
       try {
         let res = JSON.parse(data);
-        device.state = res.state;
-        res.supported_features = null
-        res.extra = null
-        self.emit("message", res);
+        if (device.state.status !== 'active') {
+          device.state = { status: 'active' };
+          self.emit("state", { id: device.id, state: device.state });
+        }
+        self.emit("message", { [device.id]: res });
       } catch (error) {
         debug(error)
       }
@@ -140,7 +153,8 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
     });
     //device.ws.on('ping', function);
     device.ws.on('close', function close (code, reason) {
-      device.state = {};
+      device.state = { status: 'close', code, reason };
+      self.emit("state", { id: device.id, state: device.state });
       clearTimeout(device.watchDog);
       if (code === 1000 || code === 10000) {
         debug(`Closed connection code: ${code}, reason: ${reason}. Reconnecting...`);
@@ -157,6 +171,8 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
       }
     })
     device.ws.on('error', function error (data) {
+      device.state = { status: 'error' };
+      self.emit("state", { id: device.id, state: device.state });
       debug(`error: ${data}`);
       device.ws.terminate();
     });

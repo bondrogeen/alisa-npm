@@ -24,13 +24,25 @@ alisa.on("message", (device, message) => {
   console.log(message);
 });
 
-alisa.on("open", (message) => {
-  console.log(message);
+alisa.on("state", (message) => {
+  console.log('state', message);
 });
 
 alisa.start()
 
 ```
+## State
+```JSON
+{ 
+  "id": "FF98FF2FFD859FF41F5FF368", 
+  "state": { 
+    "status": "init", // or "open", "active", "close"
+    "code": 1006, // only "status" = "close"
+    "reason": "<Buffer >" // only "status" = "close"
+  } 
+}
+```
+
 ## Message yandex mini
 ```JSON
 {
@@ -106,6 +118,9 @@ debug - Debug messages. default: false<br>
 
 
 
+
+#### 0.1.2
+* (bondrogeen) add this.getState()
 
 #### 0.1.1
 * (bondrogeen) initial release
