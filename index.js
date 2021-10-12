@@ -132,7 +132,7 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
     device.ws.on('open', function open () {
       device.state = { status: 'open' };
       self.emit("state", { id: device.id, state: device.state });
-      sendMessage(device.id, 'command', { payload: 'ping' });
+      sendMessage({ id: device.id, message: { command: 'ping' } });
       device.watchDog = setTimeout(() => device.ws.close(), 10000);
       // device.ping = setInterval(ping, 1000, device);
       clearTimeout(device.timer);
@@ -181,8 +181,10 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
   function ping (device) {
     if (device) { sendMessage(device.id, { command: 'ping' }); }
   }
-
-  function sendMessage (id, message) {
+  self.send = function (data) { 
+    sendMessage (data) 
+  }
+  function sendMessage ({ id, message }) {
     let device = self.devices.find(item => item.id === id);
     try {
       if (device && device.ws) {
