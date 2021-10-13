@@ -7,7 +7,7 @@ var EventEmitter = require("events").EventEmitter;
 const urlToken = 'https://quasar.yandex.net/glagol/token'
 const urlDeviceList = 'https://quasar.yandex.net/glagol/device_list'
 
-const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = false }) {
+const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = false, throttle = 1000 }) {
   EventEmitter.call(this);
 
   const self = this
@@ -15,6 +15,7 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
   self.name = name
   self.token = token
   self.debug = debug
+  self.throttle = throttle
 
   self.setToken = (token) => {
     self.token = token
@@ -25,6 +26,50 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
       console.log(value)
     }
   }
+
+  function funcThrottle (func, wait, options) {
+    let context, args, result;
+    let timeout = null;
+    let previous = 0;
+    if (!options) options = {};
+    const later = function () {
+      previous = options.leading === false ? 0 : Date.now();
+      timeout = null;
+      result = func.call(context, args);
+      if (!timeout) context = args = null;
+    };
+    return function () {
+      const now = Date.now();
+      if (!previous && options.leading === false) previous = now;
+      const remaining = wait - (now - previous);
+      context = this;
+      args = { ...args, ...arguments[0] };
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        result = func.call(context, args);
+        if (!timeout) context = args = null;
+      } else if (!timeout && options.trailing !== false) {
+        timeout = setTimeout(later, remaining);
+      }
+      return result;
+    };
+  };
+
+  function getHeader () {
+    return {
+      'Authorization': 'Oauth ' + self.token,
+      'Content-Type': 'application/json'
+    }
+  }
+
+  self.sendThrottle = funcThrottle(function (messages) {
+    self.emit("message", messages);
+    // console.log(Date.now())
+  }, self.throttle)
 
   self.getState = function () {
     const info = {
@@ -49,16 +94,13 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
       debug(error)
     }
   }
+
   self.getListDevices = async function () {
     try {
       const { data } = await axios({
         method: "get",
         url: urlDeviceList,
-        headers:
-        {
-          'Authorization': 'Oauth ' + self.token,
-          'Content-Type': 'application/json'
-        }
+        headers: getHeader()
       });
       return data
     } catch (error) {
@@ -66,16 +108,13 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
     }
 
   }
+
   self.getLocalToken = async function ({ id, platform }) {
     try {
       const { data } = await axios({
         method: 'GET',
         url: urlToken + `?device_id=${id}&platform=${platform}`,
-        headers:
-        {
-          'Authorization': 'Oauth ' + self.token,
-          'Content-Type': 'application/json'
-        }
+        headers: getHeader()
       });
       return data
     } catch (error) {
@@ -83,6 +122,7 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
     }
 
   }
+
   self.start = async function () {
     if (!self.token) {
       debug('no token')
@@ -119,6 +159,7 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
       debug(error)
     }
   }
+
   self.connection = function (device) {
     let options = {
       key: device.security.server_private_key,
@@ -144,7 +185,11 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
           device.state = { status: 'active' };
           self.emit("state", { id: device.id, state: device.state });
         }
-        self.emit("message", { [device.id]: res });
+        if (self.throttle) {
+          self.sendThrottle({ [device.id]: res })
+        } else {
+          self.emit("message", { [device.id]: res });
+        }
       } catch (error) {
         debug(error)
       }
@@ -181,9 +226,11 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
   function ping (device) {
     if (device) { sendMessage(device.id, { command: 'ping' }); }
   }
-  self.send = function (data) { 
-    sendMessage (data) 
+
+  self.send = function (data) {
+    sendMessage(data)
   }
+
   function sendMessage ({ id, message }) {
     let device = self.devices.find(item => item.id === id);
     try {

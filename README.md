@@ -109,15 +109,19 @@ alisa.start()
 ```
 ## Alisa parameters
 ```
-new Alisa({ [token], [name], [debug] });
+new Alisa({ [token], [name], [debug], [limit] });
 ```
 token - Yandex token your account.  default: null<br>
 name - Search mDns name. default: '_yandexio._tcp.local'<br>
 debug - Debug messages. default: false<br>
+throttle - Limiting the number of responses. default: 1000 === (1sec)<br>
 
 
 
 
+
+#### 0.1.3 
+* (bondrogeen) add Limiting the number of responses 
 
 #### 0.1.2
 * (bondrogeen) add this.getState()
