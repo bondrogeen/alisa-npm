@@ -4,6 +4,11 @@ const mDns = require('node-dns-sd');
 var util = require("util");
 var EventEmitter = require("events").EventEmitter;
 
+const formUrlEncoded = x => Object.keys(x).reduce((p, c) => p + `&${c}=${encodeURIComponent(x[c])}`, '')
+const url_oauth = `https://oauth.yandex.com/token`;
+const client_id = '23cabbbdc6cd418abb4b39c32c41195d';
+const client_secret = '53bc75238f0c4d08a118e51fe9203300';
+
 const urlToken = 'https://quasar.yandex.net/glagol/token'
 const urlDeviceList = 'https://quasar.yandex.net/glagol/device_list'
 
@@ -66,6 +71,26 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
     }
   }
 
+  self.getYandexToken = async function ({ username, password }) {
+    try {
+      const { data } = await axios({
+        method: "post",
+        url: url_oauth,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        data: formUrlEncoded({
+          grant_type: 'password',
+          client_id: client_id,
+          client_secret: client_secret,
+          username,
+          password
+        })
+      });
+      return data
+    } catch (error) {
+      debug(error)
+    }
+  }
+
   self.sendThrottle = funcThrottle(function (messages) {
     self.emit("message", messages);
     // console.log(Date.now())
@@ -102,23 +127,24 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
         url: urlDeviceList,
         headers: getHeader()
       });
-      return data
-    } catch (error) {
-      debug(error)
+      return { data, status: 'done' }
+    } catch ({ response }) {
+      debug(response.data)
+      return response.data
     }
-
   }
 
   self.getLocalToken = async function ({ id, platform }) {
     try {
       const { data } = await axios({
         method: 'GET',
-        url: urlToken + `?device_id=${id}&platform=${platform}`,
+        url: `${urlToken}?device_id=${id}&platform=${platform}`,
         headers: getHeader()
       });
       return data
-    } catch (error) {
-      debug(error)
+    } catch ({ response }) {
+      debug(response.data)
+      return null
     }
 
   }
@@ -126,11 +152,15 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
   self.start = async function () {
     if (!self.token) {
       debug('no token')
-      return;
+      return new Error('no token');
     }
     try {
+      let res = await self.getListDevices()
+      if (!res.data) {
+        return res;
+      }
+      let { devices: list } = res.data;
       let devices = await self.findDevices()
-      let { devices: list } = await self.getListDevices()
       const allToken = []
       devices.forEach((device) => {
         allToken.push(self.getLocalToken(device))
@@ -151,10 +181,14 @@ const alisa = function ({ token = null, name = '_yandexio._tcp.local', debug = f
 
       }).filter(device => device)
       self.devices = devices
-      debug(devices)
-      devices.forEach(device => {
-        self.connection(device)
-      })
+      if (devices.length) {
+        devices.forEach(device => {
+          self.connection(device)
+        })
+      } else {
+        debug(devices)
+      }
+      return { status: 'done' }
     } catch (error) {
       debug(error)
     }
