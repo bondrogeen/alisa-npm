@@ -10,7 +10,7 @@ alisa.on("message", (message) => {
   console.log(JSON.stringify(message, null, 2));
 });
 
-alisa.on("state", (message) => {
+alisa.on("stat e", (message) => {
   console.log('state', message);
 });
 
