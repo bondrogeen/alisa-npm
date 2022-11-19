@@ -1,19 +1,26 @@
 {
   "name": "alisa-npm",
-  "version": "0.1.2",
+  "version": "1.1.1",
   "description": "Controlling Alice via a WebSocket",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
-    "start": "node test"
+    "build": "babel src --out-dir build",
+    "dev": "nodemon src/index.js --exec babel-node",
+    "start": "node build/index.js"
   },
   "author": "bondrogeen",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.22.0",
     "node-dns-sd": "^0.4.2",
     "ws": "^8.2.2"
   },
   "devDependencies": {
-    "dotenv": "^10.0.0"
+    "dotenv": "^10.0.0",
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/node": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "eslint": "^8.14.0",
+    "nodemon": "^2.0.6"
   }
 }

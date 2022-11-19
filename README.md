@@ -5,45 +5,64 @@ Controlling Yandex Alice via a web socket
 ![image](https://raw.githubusercontent.com/bondrogeen/alisa-npm/main/images/image.jpg)
 
 ## Installation
+
 Install from NPM
+
 ```
 npm install alisa-npm
 ```
+
 Install from GIT
+
 ```
 npm install https://github.com/bondrogeen/alisa-npm
 ```
 
 ## Usage
+
 ```javascript
-const Alisa = require("alisa-npm");
-const token = '<your_token>' // your Yandex token
-const alisa = new Alisa({ token })
+const YandexDevices = require('alisa-npm');
 
-alisa.on("message", (device, message) => {
-  console.log(message);
+// Yandex  login and password
+// const username = 'xxxxxxxxxx';
+// const password = 'xxxxxxxxxx';
+// const alisa = new YandexDevices({ username, password });
+
+//  or yandex token
+
+const yandexToken = 'xx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+const alisa = new YandexDevices({ yandexToken });
+
+alisa.init();
+
+alisa.on('data', data => {
+  console.log(data);
 });
 
-alisa.on("state", (message) => {
-  console.log('state', message);
+alisa.onSend('192.168.10.22', {
+  command: 'setVolume',
+  volume: 0.1,
 });
 
-alisa.start()
-
+alisa.onSend('FF98F0299D8593E41F504368', {
+  command: 'setVolume',
+  volume: 0.5,
+});
 ```
+
 ## State
+
 ```JSON
-{ 
-  "id": "FF98FF2FFD859FF41F5FF368", 
-  "state": { 
-    "status": "init", // or "open", "active", "close"
-    "code": 1006, // only "status" = "close"
-    "reason": "<Buffer >" // only "status" = "close"
-  } 
+{
+  "id": "FF98F0299D8593E41F504368",
+  "ip": "192.168.10.22",
+  "type": "message",
+  "data": {}
 }
 ```
 
 ## Message yandex mini
+
 ```JSON
 {
   "experiments": {
@@ -107,29 +126,36 @@ alisa.start()
   "unsupported_features": []
 }
 ```
-## Alisa parameters
+
+## YandexDevices parameters
+
 ```
-new Alisa({ [token], [name], [debug], [limit] });
+new YandexDevices({ [username], [password], [yandexToken], [save] });
 ```
-token - Yandex token your account.  default: null<br>
-name - Search mDns name. default: '_yandexio._tcp.local'<br>
-debug - Debug messages. default: false<br>
-throttle - Limiting the number of responses. default: 1000 === (1sec)<br>
 
+yandexToken - Yandex token your account. default: ''<br>
+username - Yandex login your account. default: ''<br>
+password - Yandex password your account. default: ''<br>
+save - Save device configuration.. default: true<br>
 
+#### 1.1.1
 
+- (bondrogeen) Rewrote
 
+#### 0.1.3
 
-#### 0.1.3 
-* (bondrogeen) add Limiting the number of responses 
+- (bondrogeen) add Limiting the number of responses
 
 #### 0.1.2
-* (bondrogeen) add this.getState()
+
+- (bondrogeen) add this.getState()
 
 #### 0.1.1
-* (bondrogeen) initial release
+
+- (bondrogeen) initial release
 
 ## License
+
 The MIT License (MIT)
 
 Copyright (c) 2021 bondrogeen <bondrogeen@gmail.com>
