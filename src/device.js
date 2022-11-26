@@ -28,14 +28,6 @@ class Device extends Client {
     this.#init();
   }
 
-  get id() {
-    return this.#id;
-  }
-
-  get ip() {
-    return this.#ip;
-  }
-
   #init() {
     this.on('open', e => {
       this.onMessage('open', e);
@@ -50,11 +42,6 @@ class Device extends Client {
     });
 
     this.on('error', e => this.onMessage('error', e));
-  }
-
-  async updateToken() {
-    const { status, token } = await this.fetchUpdateToken();
-    if ((status === 'ok', token)) this.setToken(token);
   }
 
   #parseMessage(e) {
@@ -76,11 +63,44 @@ class Device extends Client {
 
   #getSendData(type, data) {
     return {
-      id: this.#id,
-      ip: this.#ip,
+      ...this.getInfo(),
       type,
       data,
     };
+  }
+
+  get id() {
+    return this.#id;
+  }
+
+  get ip() {
+    return this.#ip;
+  }
+  get platform() {
+    return this.#platform;
+  }
+
+  get port() {
+    return this.#port;
+  }
+
+  getInfo() {
+    return {
+      id: this.#id,
+      ip: this.#ip,
+      platform: this.#platform,
+      port: this.#port,
+      connected: super.isConnected(),
+    };
+  }
+
+  disconnect() {
+    super.disconnect();
+  }
+
+  async updateToken() {
+    const { status, token } = await this.fetchUpdateToken();
+    if ((status === 'ok', token)) this.setToken(token);
   }
 
   setToken(token) {

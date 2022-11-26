@@ -1,44 +1,91 @@
 import { EventEmitter } from 'node:events';
 import Device from './device';
-import { getDeviceList, getYandexToken, getDeviceToken, findDeviceList, readJSON, writeJSON } from './service';
+import { getDeviceList, getYandexToken, getDeviceToken, findDeviceList } from './service';
 
 class YandexDevices extends EventEmitter {
-  constructor({ username, password, yandexToken, save = true }) {
+  #token;
+  #devices;
+  #localDevices;
+  #cloudDevices;
+  #isConnected;
+  constructor(token) {
     super();
-    this.devices = [];
-    this.username = username;
-    this.password = password;
-    this.yandexToken = yandexToken;
-    this.save = save;
+    this.#devices = [];
+    this.#isConnected = false;
+    this.#localDevices = [];
+    this.#cloudDevices = [];
+    this.#token = token;
   }
 
-  async init() {
-    let devices = await readJSON();
-    if (!devices?.length) {
-      if (!this.yandexToken) await this.getYandexToken();
-      const localDevices = await this.findDeviceList();
-      devices = await this.getAllToken(localDevices);
-      await writeJSON(devices);
+  async setToken(token) {
+    if (!token) return;
+    this.#token = token;
+    const { devices, status } = await this.getDeviceList();
+    if (!devices || !status) {
+      this.#token = '';
+      return;
     }
-    this.conection(devices);
+    this.#cloudDevices = devices;
+    return true;
   }
 
-  conection(devices) {
+  getState() {
+    return {
+      token: Boolean(this.#token),
+      localDevices: this.#localDevices,
+      cloudDevices: this.#cloudDevices,
+      devices: this.#devices.map(device => {
+        return device.getInfo();
+      }),
+    };
+  }
+
+  async scan() {
+    const localDevices = await this.findDeviceList();
+    if (localDevices.length) {
+      this.#localDevices = await this.getAllToken(localDevices);
+    }
+    return this.#localDevices;
+  }
+
+  async connection() {
+    if (!this.#token) {
+      console.warn('not token');
+      return;
+    }
+    await this.scan();
     try {
-      devices.forEach((device, index) => {
-        this.devices[index] = new Device(device);
-        this.devices[index].fetchUpdateToken = getDeviceToken.bind(this.devices[index], { ...device, yandexToken: this.yandexToken });
-        this.devices[index].connect();
-        this.devices[index].on('data', this.onMessage.bind(this));
+      const ids = this.#devices.map(i => i.id);
+      this.#localDevices.forEach((device, index) => {
+        const id = device.id;
+        if (ids.includes(id)) return;
+        this.#devices[index] = new Device(device);
+        this.#devices[index].fetchUpdateToken = getDeviceToken.bind(this.#devices[index], { ...device, token: this.#token });
+        this.#devices[index].connect();
+        this.#devices[index].on('data', this.onMessage.bind(this));
       });
-      this.emit('connected');
+      const state = this.getState();
+      if (this.#localDevices.length) {
+        this.#isConnected = true;
+        this.emit('connected', state);
+      }
+      return state;
     } catch (error) {
       console.log(error);
     }
   }
 
-  async clear() {
-    await writeJSON([]);
+  disconnection() {
+    try {
+      this.#devices.forEach(device => {
+        device.disconnect();
+      });
+      this.#devices = [];
+      this.#isConnected = false;
+      this.emit('disconnected');
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   onMessage(data) {
@@ -46,17 +93,14 @@ class YandexDevices extends EventEmitter {
   }
 
   onSend(find, data) {
-    const device = this.devices.find(item => {
+    const device = this.#devices.find(item => {
       return item.id === find || item.ip === find;
     });
-    if(device) device.send(data)
+    if (device) device.send(data);
   }
 
-  async getYandexToken() {
-    const { username, password } = this;
-    const res = await getYandexToken({ username, password });
-    if (res?.access_token) this.yandexToken = res.access_token;
-    return res;
+  async getYandexToken({ username, password }) {
+    return await getYandexToken({ username, password });
   }
 
   async findDeviceList() {
@@ -71,14 +115,14 @@ class YandexDevices extends EventEmitter {
   }
 
   async getDeviceList() {
-    return await getDeviceList(this.yandexToken);
+    return await getDeviceList(this.#token);
   }
 
   async getAllToken(devices) {
     const all = [];
-    const yandexToken = this.yandexToken;
+    const token = this.#token;
     devices.forEach(device => {
-      all.push(getDeviceToken({ ...device, yandexToken }));
+      all.push(getDeviceToken({ ...device, token }));
     });
     const tokens = await Promise.all(all);
     return devices.map((item, index) => ({ ...item, token: tokens?.[index]?.token || '' }));

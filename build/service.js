@@ -58,12 +58,12 @@ var fetch = function fetch(_ref) {
   });
 };
 exports.fetch = fetch;
-var getDeviceList = function getDeviceList(yandexToken) {
+var getDeviceList = function getDeviceList(token) {
   try {
     var options = {
       url: 'https://quasar.yandex.net/glagol/device_list',
       headers: {
-        Authorization: 'Oauth ' + yandexToken
+        Authorization: 'Oauth ' + token
       }
     };
     return fetch(options);
@@ -75,13 +75,13 @@ exports.getDeviceList = getDeviceList;
 var getDeviceToken = function getDeviceToken(_ref2) {
   var id = _ref2.id,
     platform = _ref2.platform,
-    yandexToken = _ref2.yandexToken;
+    token = _ref2.token;
   try {
     return fetch({
       method: 'GET',
       url: "https://quasar.yandex.net/glagol/token?device_id=".concat(id, "&platform=").concat(platform),
       headers: {
-        Authorization: 'Oauth ' + yandexToken
+        Authorization: 'Oauth ' + token
       }
     });
   } catch (error) {
@@ -178,8 +178,7 @@ var findDeviceList = /*#__PURE__*/function () {
           case 0:
             _context3.next = 2;
             return _nodeDnsSd["default"].discover({
-              name: '_yandexio._tcp.local',
-              wait: 3
+              name: '_yandexio._tcp.local'
             });
           case 2:
             return _context3.abrupt("return", _context3.sent);

@@ -133,6 +133,11 @@ var Client = /*#__PURE__*/function (_EventEmitter) {
     value: function send(data) {
       if (_classPrivateFieldGet(this, _isConnect)) _classPrivateFieldGet(this, _ws).send(data);
     }
+  }, {
+    key: "isConnected",
+    value: function isConnected() {
+      return _classPrivateFieldGet(this, _connection);
+    }
   }]);
   return Client;
 }(_nodeEvents.EventEmitter);
@@ -164,7 +169,7 @@ function _onClose2(e) {
   this.emit('close', e);
   _classPrivateFieldSet(this, _connection, true);
 }
-function _onError2(e) {
+function _onError2() {
   _classPrivateFieldSet(this, _isConnect, false);
   _classPrivateFieldGet(this, _ws).terminate();
 }

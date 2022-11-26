@@ -25,114 +25,216 @@ function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) ===
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
+function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+function _classPrivateFieldGet(receiver, privateMap) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get"); return _classApplyDescriptorGet(receiver, descriptor); }
+function _classApplyDescriptorGet(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
+function _classPrivateFieldSet(receiver, privateMap, value) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "set"); _classApplyDescriptorSet(receiver, descriptor, value); return value; }
+function _classExtractFieldDescriptor(receiver, privateMap, action) { if (!privateMap.has(receiver)) { throw new TypeError("attempted to " + action + " private field on non-instance"); } return privateMap.get(receiver); }
+function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
+var _token = /*#__PURE__*/new WeakMap();
+var _devices = /*#__PURE__*/new WeakMap();
+var _localDevices = /*#__PURE__*/new WeakMap();
+var _cloudDevices = /*#__PURE__*/new WeakMap();
+var _isConnected = /*#__PURE__*/new WeakMap();
 var YandexDevices = /*#__PURE__*/function (_EventEmitter) {
   _inherits(YandexDevices, _EventEmitter);
   var _super = _createSuper(YandexDevices);
-  function YandexDevices(_ref) {
+  function YandexDevices(token) {
     var _this;
-    var username = _ref.username,
-      password = _ref.password,
-      yandexToken = _ref.yandexToken,
-      _ref$save = _ref.save,
-      save = _ref$save === void 0 ? true : _ref$save;
     _classCallCheck(this, YandexDevices);
     _this = _super.call(this);
-    _this.devices = [];
-    _this.username = username;
-    _this.password = password;
-    _this.yandexToken = yandexToken;
-    _this.save = save;
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _token, {
+      writable: true,
+      value: void 0
+    });
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _devices, {
+      writable: true,
+      value: void 0
+    });
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _localDevices, {
+      writable: true,
+      value: void 0
+    });
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _cloudDevices, {
+      writable: true,
+      value: void 0
+    });
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _isConnected, {
+      writable: true,
+      value: void 0
+    });
+    _classPrivateFieldSet(_assertThisInitialized(_this), _devices, []);
+    _classPrivateFieldSet(_assertThisInitialized(_this), _isConnected, false);
+    _classPrivateFieldSet(_assertThisInitialized(_this), _localDevices, []);
+    _classPrivateFieldSet(_assertThisInitialized(_this), _cloudDevices, []);
+    _classPrivateFieldSet(_assertThisInitialized(_this), _token, token);
     return _this;
   }
   _createClass(YandexDevices, [{
-    key: "init",
+    key: "setToken",
     value: function () {
-      var _init = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-        var _devices;
-        var devices, localDevices;
+      var _setToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(token) {
+        var _yield$this$getDevice, devices, status;
         return _regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                _context.next = 2;
-                return (0, _service.readJSON)();
+                if (token) {
+                  _context.next = 2;
+                  break;
+                }
+                return _context.abrupt("return");
               case 2:
-                devices = _context.sent;
-                if ((_devices = devices) !== null && _devices !== void 0 && _devices.length) {
-                  _context.next = 15;
+                _classPrivateFieldSet(this, _token, token);
+                _context.next = 5;
+                return this.getDeviceList();
+              case 5:
+                _yield$this$getDevice = _context.sent;
+                devices = _yield$this$getDevice.devices;
+                status = _yield$this$getDevice.status;
+                if (!(!devices || !status)) {
+                  _context.next = 11;
                   break;
                 }
-                if (this.yandexToken) {
-                  _context.next = 7;
-                  break;
-                }
-                _context.next = 7;
-                return this.getYandexToken();
-              case 7:
-                _context.next = 9;
-                return this.findDeviceList();
-              case 9:
-                localDevices = _context.sent;
-                _context.next = 12;
-                return this.getAllToken(localDevices);
-              case 12:
-                devices = _context.sent;
-                _context.next = 15;
-                return (0, _service.writeJSON)(devices);
-              case 15:
-                this.conection(devices);
-              case 16:
+                _classPrivateFieldSet(this, _token, '');
+                return _context.abrupt("return");
+              case 11:
+                _classPrivateFieldSet(this, _cloudDevices, devices);
+                return _context.abrupt("return", true);
+              case 13:
               case "end":
                 return _context.stop();
             }
           }
         }, _callee, this);
       }));
-      function init() {
-        return _init.apply(this, arguments);
+      function setToken(_x) {
+        return _setToken.apply(this, arguments);
       }
-      return init;
+      return setToken;
     }()
   }, {
-    key: "conection",
-    value: function conection(devices) {
-      var _this2 = this;
-      try {
-        devices.forEach(function (device, index) {
-          _this2.devices[index] = new _device["default"](device);
-          _this2.devices[index].fetchUpdateToken = _service.getDeviceToken.bind(_this2.devices[index], _objectSpread(_objectSpread({}, device), {}, {
-            yandexToken: _this2.yandexToken
-          }));
-          _this2.devices[index].connect();
-          _this2.devices[index].on('data', _this2.onMessage.bind(_this2));
-        });
-        this.emit('connected');
-      } catch (error) {
-        console.log(error);
-      }
+    key: "getState",
+    value: function getState() {
+      return {
+        token: Boolean(_classPrivateFieldGet(this, _token)),
+        localDevices: _classPrivateFieldGet(this, _localDevices),
+        cloudDevices: _classPrivateFieldGet(this, _cloudDevices),
+        devices: _classPrivateFieldGet(this, _devices).map(function (device) {
+          return device.getInfo();
+        })
+      };
     }
   }, {
-    key: "clear",
+    key: "scan",
     value: function () {
-      var _clear = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
+      var _scan = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
+        var localDevices;
         return _regeneratorRuntime().wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
                 _context2.next = 2;
-                return (0, _service.writeJSON)([]);
+                return this.findDeviceList();
               case 2:
+                localDevices = _context2.sent;
+                if (!localDevices.length) {
+                  _context2.next = 11;
+                  break;
+                }
+                _context2.t0 = _classPrivateFieldSet;
+                _context2.t1 = this;
+                _context2.t2 = _localDevices;
+                _context2.next = 9;
+                return this.getAllToken(localDevices);
+              case 9:
+                _context2.t3 = _context2.sent;
+                (0, _context2.t0)(_context2.t1, _context2.t2, _context2.t3);
+              case 11:
+                return _context2.abrupt("return", _classPrivateFieldGet(this, _localDevices));
+              case 12:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2);
+        }, _callee2, this);
       }));
-      function clear() {
-        return _clear.apply(this, arguments);
+      function scan() {
+        return _scan.apply(this, arguments);
       }
-      return clear;
+      return scan;
     }()
+  }, {
+    key: "connection",
+    value: function () {
+      var _connection = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
+        var _this2 = this;
+        var ids, state;
+        return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                if (_classPrivateFieldGet(this, _token)) {
+                  _context3.next = 3;
+                  break;
+                }
+                console.warn('not token');
+                return _context3.abrupt("return");
+              case 3:
+                _context3.next = 5;
+                return this.scan();
+              case 5:
+                _context3.prev = 5;
+                ids = _classPrivateFieldGet(this, _devices).map(function (i) {
+                  return i.id;
+                });
+                _classPrivateFieldGet(this, _localDevices).forEach(function (device, index) {
+                  var id = device.id;
+                  if (ids.includes(id)) return;
+                  _classPrivateFieldGet(_this2, _devices)[index] = new _device["default"](device);
+                  _classPrivateFieldGet(_this2, _devices)[index].fetchUpdateToken = _service.getDeviceToken.bind(_classPrivateFieldGet(_this2, _devices)[index], _objectSpread(_objectSpread({}, device), {}, {
+                    token: _classPrivateFieldGet(_this2, _token)
+                  }));
+                  _classPrivateFieldGet(_this2, _devices)[index].connect();
+                  _classPrivateFieldGet(_this2, _devices)[index].on('data', _this2.onMessage.bind(_this2));
+                });
+                state = this.getState();
+                if (_classPrivateFieldGet(this, _localDevices).length) {
+                  _classPrivateFieldSet(this, _isConnected, true);
+                  this.emit('connected', state);
+                }
+                return _context3.abrupt("return", state);
+              case 13:
+                _context3.prev = 13;
+                _context3.t0 = _context3["catch"](5);
+                console.log(_context3.t0);
+              case 16:
+              case "end":
+                return _context3.stop();
+            }
+          }
+        }, _callee3, this, [[5, 13]]);
+      }));
+      function connection() {
+        return _connection.apply(this, arguments);
+      }
+      return connection;
+    }()
+  }, {
+    key: "disconnection",
+    value: function disconnection() {
+      try {
+        _classPrivateFieldGet(this, _devices).forEach(function (device) {
+          device.disconnect();
+        });
+        _classPrivateFieldSet(this, _devices, []);
+        _classPrivateFieldSet(this, _isConnected, false);
+        this.emit('disconnected');
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }, {
     key: "onMessage",
     value: function onMessage(data) {
@@ -141,7 +243,7 @@ var YandexDevices = /*#__PURE__*/function (_EventEmitter) {
   }, {
     key: "onSend",
     value: function onSend(find, data) {
-      var device = this.devices.find(function (item) {
+      var device = _classPrivateFieldGet(this, _devices).find(function (item) {
         return item.id === find || item.ip === find;
       });
       if (device) device.send(data);
@@ -149,30 +251,28 @@ var YandexDevices = /*#__PURE__*/function (_EventEmitter) {
   }, {
     key: "getYandexToken",
     value: function () {
-      var _getYandexToken2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
-        var username, password, res;
-        return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+      var _getYandexToken2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(_ref) {
+        var username, password;
+        return _regeneratorRuntime().wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
-                username = this.username, password = this.password;
-                _context3.next = 3;
+                username = _ref.username, password = _ref.password;
+                _context4.next = 3;
                 return (0, _service.getYandexToken)({
                   username: username,
                   password: password
                 });
               case 3:
-                res = _context3.sent;
-                if (res !== null && res !== void 0 && res.access_token) this.yandexToken = res.access_token;
-                return _context3.abrupt("return", res);
-              case 6:
+                return _context4.abrupt("return", _context4.sent);
+              case 4:
               case "end":
-                return _context3.stop();
+                return _context4.stop();
             }
           }
-        }, _callee3, this);
+        }, _callee4);
       }));
-      function getYandexToken() {
+      function getYandexToken(_x2) {
         return _getYandexToken2.apply(this, arguments);
       }
       return getYandexToken;
@@ -180,17 +280,17 @@ var YandexDevices = /*#__PURE__*/function (_EventEmitter) {
   }, {
     key: "findDeviceList",
     value: function () {
-      var _findDeviceList2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4() {
+      var _findDeviceList2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
         var list;
-        return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+        return _regeneratorRuntime().wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
-                _context4.next = 2;
+                _context5.next = 2;
                 return (0, _service.findDeviceList)();
               case 2:
-                list = _context4.sent;
-                return _context4.abrupt("return", list.map(function (_ref2) {
+                list = _context5.sent;
+                return _context5.abrupt("return", list.map(function (_ref2) {
                   var address = _ref2.address,
                     port = _ref2.service.port,
                     answers = _ref2.packet.answers;
@@ -212,10 +312,10 @@ var YandexDevices = /*#__PURE__*/function (_EventEmitter) {
                 }));
               case 4:
               case "end":
-                return _context4.stop();
+                return _context5.stop();
             }
           }
-        }, _callee4);
+        }, _callee5);
       }));
       function findDeviceList() {
         return _findDeviceList2.apply(this, arguments);
@@ -225,21 +325,21 @@ var YandexDevices = /*#__PURE__*/function (_EventEmitter) {
   }, {
     key: "getDeviceList",
     value: function () {
-      var _getDeviceList2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
-        return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+      var _getDeviceList2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6() {
+        return _regeneratorRuntime().wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
-                _context5.next = 2;
-                return (0, _service.getDeviceList)(this.yandexToken);
+                _context6.next = 2;
+                return (0, _service.getDeviceList)(_classPrivateFieldGet(this, _token));
               case 2:
-                return _context5.abrupt("return", _context5.sent);
+                return _context6.abrupt("return", _context6.sent);
               case 3:
               case "end":
-                return _context5.stop();
+                return _context6.stop();
             }
           }
-        }, _callee5, this);
+        }, _callee6, this);
       }));
       function getDeviceList() {
         return _getDeviceList2.apply(this, arguments);
@@ -249,24 +349,24 @@ var YandexDevices = /*#__PURE__*/function (_EventEmitter) {
   }, {
     key: "getAllToken",
     value: function () {
-      var _getAllToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(devices) {
-        var all, yandexToken, tokens;
-        return _regeneratorRuntime().wrap(function _callee6$(_context6) {
+      var _getAllToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(devices) {
+        var all, token, tokens;
+        return _regeneratorRuntime().wrap(function _callee7$(_context7) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context7.prev = _context7.next) {
               case 0:
                 all = [];
-                yandexToken = this.yandexToken;
+                token = _classPrivateFieldGet(this, _token);
                 devices.forEach(function (device) {
                   all.push((0, _service.getDeviceToken)(_objectSpread(_objectSpread({}, device), {}, {
-                    yandexToken: yandexToken
+                    token: token
                   })));
                 });
-                _context6.next = 5;
+                _context7.next = 5;
                 return Promise.all(all);
               case 5:
-                tokens = _context6.sent;
-                return _context6.abrupt("return", devices.map(function (item, index) {
+                tokens = _context7.sent;
+                return _context7.abrupt("return", devices.map(function (item, index) {
                   var _tokens$index;
                   return _objectSpread(_objectSpread({}, item), {}, {
                     token: (tokens === null || tokens === void 0 ? void 0 : (_tokens$index = tokens[index]) === null || _tokens$index === void 0 ? void 0 : _tokens$index.token) || ''
@@ -274,12 +374,12 @@ var YandexDevices = /*#__PURE__*/function (_EventEmitter) {
                 }));
               case 7:
               case "end":
-                return _context6.stop();
+                return _context7.stop();
             }
           }
-        }, _callee6, this);
+        }, _callee7, this);
       }));
-      function getAllToken(_x) {
+      function getAllToken(_x3) {
         return _getAllToken.apply(this, arguments);
       }
       return getAllToken;

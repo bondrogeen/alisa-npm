@@ -35,11 +35,11 @@ const fetch = ({ url, method, data = '', headers = {} }) => {
   });
 };
 
-const getDeviceList = yandexToken => {
+const getDeviceList = token => {
   try {
     const options = {
       url: 'https://quasar.yandex.net/glagol/device_list',
-      headers: { Authorization: 'Oauth ' + yandexToken },
+      headers: { Authorization: 'Oauth ' + token },
     };
     return fetch(options);
   } catch (error) {
@@ -47,12 +47,12 @@ const getDeviceList = yandexToken => {
   }
 };
 
-const getDeviceToken = ({ id, platform, yandexToken }) => {
+const getDeviceToken = ({ id, platform, token }) => {
   try {
     return fetch({
       method: 'GET',
       url: `https://quasar.yandex.net/glagol/token?device_id=${id}&platform=${platform}`,
-      headers: { Authorization: 'Oauth ' + yandexToken },
+      headers: { Authorization: 'Oauth ' + token },
     });
   } catch (error) {
     console.error(error);
@@ -90,6 +90,6 @@ const writeJSON = async data => {
   }
 };
 
-const findDeviceList = async () => await mDns.discover({ name: '_yandexio._tcp.local', wait: 3 });
+const findDeviceList = async () => await mDns.discover({ name: '_yandexio._tcp.local' });
 
 export { fetch, getYandexToken, getDeviceToken, getDeviceList, findDeviceList, writeJSON, readJSON };
