@@ -23,31 +23,58 @@ npm install https://github.com/bondrogeen/alisa-npm
 ```javascript
 const YandexDevices = require('alisa-npm');
 
-// Yandex  login and password
-// const username = 'xxxxxxxxxx';
-// const password = 'xxxxxxxxxx';
-// const alisa = new YandexDevices({ username, password });
+const username = 'xxxxxxxxxxxx';
+const password = 'xxxxxxxxxxxx';
 
-//  or yandex token
+let yandexToken = '';
 
-const yandexToken = 'xx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-const alisa = new YandexDevices({ yandexToken });
+const alisa = new YandexDevices();
 
-alisa.init();
+(async () => {
+  if (!yandexToken) {
+    const data = await alisa.getYandexToken({ username, password });
+    yandexToken = data?.access_token || '';
+  }
 
-alisa.on('data', data => {
-  console.log(data);
-});
+  if (!yandexToken) return console.log('not token');
 
-alisa.onSend('192.168.10.22', {
-  command: 'setVolume',
-  volume: 0.1,
-});
+  alisa.setToken(yandexToken);
 
-alisa.onSend('FF98F0299D8593E41F504368', {
-  command: 'setVolume',
-  volume: 0.5,
-});
+  console.log(yandexToken);
+
+  alisa.on('data', message => {
+    const {
+      id, // 'XXXXXXXXXXXXXXXXXXXXX' String - id device
+      ip, // 'XXX.XXX.XXX.XXX' String - ip device
+      platform, // 'yandexmini' String - platform device
+      port, //: 1961 Number - post device
+      connected, // true, Boolean - state device
+      type, //: 'message', String - type event ['open', 'message', 'error', 'close']
+      data, //: Object - raw data on device
+    } = message;
+
+    if (type === 'open') {
+      alisa.onSend(id, { command: 'setVolume', volume: 0.3 });
+      alisa.onSend(ip, { command: 'playMusic', id: '52033142', type: 'track' });
+    }
+
+    if (type === 'message') {
+      console.log(message);
+    }
+  });
+
+  alisa.on('connected', data => {
+    console.log('connected', data);
+    // or
+    // console.log(alisa.getState())
+  });
+
+  const state = await alisa.connection();
+
+  if (state) {
+    console.log(alisa.getState());
+  }
+})();
 ```
 
 ## State
@@ -56,6 +83,9 @@ alisa.onSend('FF98F0299D8593E41F504368', {
 {
   "id": "FF98F0299D8593E41F504368",
   "ip": "192.168.10.22",
+  "platform": "yandexmini",
+  "port": 1961,
+  "connected": true,
   "type": "message",
   "data": {}
 }
@@ -130,13 +160,14 @@ alisa.onSend('FF98F0299D8593E41F504368', {
 ## YandexDevices parameters
 
 ```
-new YandexDevices({ [username], [password], [yandexToken], [save] });
+new YandexDevices([yandexToken]);
 ```
 
 yandexToken - Yandex token your account. default: ''<br>
-username - Yandex login your account. default: ''<br>
-password - Yandex password your account. default: ''<br>
-save - Save device configuration.. default: true<br>
+
+#### 1.2.0
+
+- (bondrogeen) Change
 
 #### 1.1.1
 
